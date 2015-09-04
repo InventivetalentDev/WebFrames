@@ -1,0 +1,12 @@
+name: WebFrames
+main: org.inventivetalent.webframes.WebFrames
+author: inventivetalent
+version: ${project.version}
+
+softdepend: [AnimatedFrames]
+
+commands:
+  webframes:
+    aliases: [webframe, wf]
+  webframecreate:
+    aliases: [createwebframe, wfcreate, createwf, wfc, cwf]
