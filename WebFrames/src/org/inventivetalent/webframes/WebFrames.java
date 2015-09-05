@@ -3,6 +3,7 @@ package org.inventivetalent.webframes;
 import de.inventivegames.animatedframes.AnimatedFrames;
 import de.inventivegames.animatedframes.api.LoadListener;
 import org.bukkit.Bukkit;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.JSONObject;
@@ -71,7 +72,10 @@ public class WebFrames extends JavaPlugin {
 
 		instance = this;
 
-		getCommand("webframecreate").setExecutor(new CommandHandler());
+		CommandHandler commandHandler;
+		PluginCommand command = getCommand("webframecreate");
+		command.setExecutor(commandHandler = new CommandHandler());
+		command.setTabCompleter(commandHandler);
 
 		api = new API();
 

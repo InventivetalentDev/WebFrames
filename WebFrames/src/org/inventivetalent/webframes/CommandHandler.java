@@ -4,15 +4,18 @@ import de.inventivegames.animatedframes.AnimatedFrames;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.json.JSONObject;
 
 import javax.annotation.Nullable;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
-public class CommandHandler implements CommandExecutor {
+public class CommandHandler implements CommandExecutor, TabCompleter {
 
 	@Override
 	public boolean onCommand(final CommandSender sender, Command command, String s, String[] args) {
@@ -82,6 +85,21 @@ public class CommandHandler implements CommandExecutor {
 		}
 
 		return false;
+	}
+
+	@Override
+	public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args) {
+		List<String> list = new ArrayList<>();
+
+		if (args.length >= 2) {
+			if (sender.hasPermission("webframe.create")) {
+				for (RenderOptions.Option option : RenderOptions.Option.values()) {
+					list.add("-" + option.key);
+				}
+			}
+		}
+
+		return list;
 	}
 
 	void handleRenderError(Player player, RenderError error) {
