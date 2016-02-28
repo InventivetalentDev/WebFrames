@@ -28,12 +28,14 @@
 
 package org.inventivetalent.webframes;
 
-import de.inventivegames.animatedframes.AnimatedFrames;
-import de.inventivegames.animatedframes.api.LoadListener;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.inventivetalent.animatedframes.AnimatedFrames;
+import org.inventivetalent.animatedframes.event.ImageLoadEvent;
 import org.json.JSONObject;
 import org.mcstats.MetricsLite;
 
@@ -54,38 +56,6 @@ public class WebFrames extends JavaPlugin {
 	private static WebFramesAPI api;
 
 	@Override
-	public void onLoad() {
-		AnimatedFrames.getApi().addLoadListener(new LoadListener() {
-			@Override
-			public boolean listenFor(URL url, int width, int height, JSONObject meta) {
-				return url.toString().contains("webrender.inventivetalent.org/renders/");
-			}
-
-			@Override
-			public void onLoadImage(@Nonnull URL url, @Nonnull final int width, @Nonnull final int height, final JSONObject meta, @Nonnull final LoadCallback loadCallback) {
-				if (meta == null) {
-					loadCallback.call(url, width, height, meta);
-					return;
-				}
-				try {
-					URL siteURL = new URL(meta.getString("siteURL"));
-					RenderOptions renderOptions = new RenderOptions();
-					renderOptions.loadJSON(meta.getJSONObject("renderOptions"));
-
-					getApi().preloadImage(siteURL, renderOptions, new Callback<URL>() {
-						@Override
-						public void call(URL value, @Nullable Throwable error) {
-							loadCallback.call(value, width, height, meta);
-						}
-					});
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-
-	@Override
 	public void onEnable() {
 		if (!Bukkit.getPluginManager().isPluginEnabled("AnimatedFrames")) {
 			getLogger().severe("****************************************");
@@ -99,6 +69,32 @@ public class WebFrames extends JavaPlugin {
 		}
 
 		instance = this;
+
+		Bukkit.getPluginManager().registerEvents(new Listener() {
+			@EventHandler
+			public void on(final ImageLoadEvent event) {
+				if (event.getUrl().toString().contains("webrender.inventivetalent.org/renders/")) {
+					JSONObject meta = event.getMeta();
+					if (meta == null) { return; }
+					try {
+						URL siteURL = new URL(meta.getString("siteURL"));
+						RenderOptions renderOptions = new RenderOptions();
+						renderOptions.loadJSON(meta.getJSONObject("renderOptions"));
+
+						getApi().preloadImage(siteURL, renderOptions, new Callback<URL>() {
+							@Override
+							public void call(URL value, @Nullable Throwable error) {
+								//								loadCallback.call(value, width, height, meta);
+								event.setUrl(value);
+								event.finish();
+							}
+						});
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				} else { event.ignore(); }
+			}
+		}, this);
 
 		CommandHandler commandHandler;
 		PluginCommand command = getCommand("webframecreate");

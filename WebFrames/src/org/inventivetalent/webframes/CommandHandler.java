@@ -28,12 +28,12 @@
 
 package org.inventivetalent.webframes;
 
-import de.inventivegames.animatedframes.AnimatedFrames;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.inventivetalent.animatedframes.AnimatedFrames;
 import org.json.JSONObject;
 
 import javax.annotation.Nullable;
