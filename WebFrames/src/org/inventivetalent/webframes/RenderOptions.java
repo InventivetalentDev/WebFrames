@@ -28,7 +28,7 @@
 
 package org.inventivetalent.webframes;
 
-import de.inventivegames.animatedframes.AnimatedFrames;
+import org.inventivetalent.animatedframes.AnimatedFrames;
 import org.json.JSONObject;
 
 import javax.script.ScriptException;
