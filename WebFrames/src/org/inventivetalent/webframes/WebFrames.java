@@ -28,22 +28,25 @@
 
 package org.inventivetalent.webframes;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.inventivetalent.animatedframes.AnimatedFrames;
-import org.inventivetalent.animatedframes.event.ImageLoadEvent;
-import org.json.JSONObject;
+import org.inventivetalent.animatedframes.event.AsyncFrameCreationEvent;
+import org.inventivetalent.animatedframes.event.AsyncFrameLoadEvent;
+import org.inventivetalent.animatedframes.event.AsyncImageRequestEvent;
+import org.inventivetalent.update.spiget.SpigetUpdate;
+import org.inventivetalent.update.spiget.UpdateCallback;
 import org.mcstats.MetricsLite;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -53,7 +56,8 @@ public class WebFrames extends JavaPlugin {
 
 	static final String RENDER_URL = "https://webrender.inventivetalent.org/?url=%s%s";
 
-	private static WebFramesAPI api;
+	static API api;
+	SpigetUpdate spigetUpdate;
 
 	@Override
 	public void onEnable() {
@@ -71,28 +75,46 @@ public class WebFrames extends JavaPlugin {
 		instance = this;
 
 		Bukkit.getPluginManager().registerEvents(new Listener() {
+
 			@EventHandler
-			public void on(final ImageLoadEvent event) {
-				if (event.getUrl().toString().contains("webrender.inventivetalent.org/renders/")) {
-					JSONObject meta = event.getMeta();
-					if (meta == null) { return; }
+			public void on(final AsyncFrameCreationEvent event) throws MalformedURLException {
+				if (event.getSource().toLowerCase().contains("webrender.inventivetalent.org")) {
+					getApi().preloadImage(new URL(event.getSource()), new RenderOptions(), new Callback<URL>() {
+						@Override
+						public void call(URL value, @Nullable Throwable error) {
+							event.getMeta().addProperty("siteURL", value.toString());
+						}
+					});
+				}
+			}
+
+			@EventHandler
+			public void on(final AsyncFrameLoadEvent event) {
+				if (event.getFrame().getImageSource().contains("webrender.inventivetalent.org/renders/")) {
+					JsonObject meta = event.getFrame().getMeta();
+					if (meta == null || !meta.has("siteURL")) { return; }
 					try {
-						URL siteURL = new URL(meta.getString("siteURL"));
+						URL siteURL = new URL(meta.get("siteURL").getAsString());
 						RenderOptions renderOptions = new RenderOptions();
-						renderOptions.loadJSON(meta.getJSONObject("renderOptions"));
+						renderOptions.loadJSON(meta.getAsJsonObject("renderOptions"));
 
 						getApi().preloadImage(siteURL, renderOptions, new Callback<URL>() {
 							@Override
 							public void call(URL value, @Nullable Throwable error) {
-								//								loadCallback.call(value, width, height, meta);
-								event.setUrl(value);
-								event.finish();
+								event.getFrame().setImageSource(value.toString());
 							}
 						});
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-				} else { event.ignore(); }
+				}
+			}
+
+			@EventHandler
+			public void on(AsyncImageRequestEvent event) {
+				if (event.getSource().contains("webrender.inventivetalent.org")) {
+					event.setShouldDownload(true);
+				}
 			}
 		}, this);
 
@@ -108,63 +130,54 @@ public class WebFrames extends JavaPlugin {
 			if (metrics.start()) {
 				getLogger().info("Metrics started");
 			}
+
+			spigetUpdate = new SpigetUpdate(this, 11840).setUserAgent("WebFrames/" + getDescription().getVersion());
+			spigetUpdate.checkForUpdate(new UpdateCallback() {
+				@Override
+				public void updateAvailable(String s, String s1, boolean b) {
+					getLogger().info("A new version is available (" + s + "). Download it from https://r.spiget.org/11840");
+					getLogger().info("(If the above version is lower than the installed version, you are probably up-to-date)");
+				}
+
+				@Override
+				public void upToDate() {
+					getLogger().info("The plugin is up-to-date.");
+				}
+			});
 		} catch (Exception e) {
 		}
 	}
 
-	public static WebFramesAPI getApi() {
+	public static API getApi() {
 		return api;
 	}
 
-	class API implements WebFramesAPI {
+	public class API {
 
-		@Override
 		public void preloadImage(@Nonnull final URL url, @Nonnull final RenderOptions options, @Nonnull final Callback<URL> callback) {
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						URL renderURL = new URL(String.format(RENDER_URL, url.toString(), options.toURLVar()));
-						URLConnection connection = renderURL.openConnection();
-						connection.setConnectTimeout(30000);
-						connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
-						JSONObject json = readInputJSON(connection.getInputStream());
-						if (json.has("error")) {
-							throw new RenderError(json.getJSONObject("error"));
-						}
-						URL imageURL = new URL(json.getString("image"));
-						callback.call(imageURL, null);
-					} catch (Throwable e) {
-						callback.call(null, e);
-					}
+			try {
+				URL renderURL = new URL(String.format(RENDER_URL, url.toString(), options.toURLVar()));
+				URLConnection connection = renderURL.openConnection();
+				connection.setConnectTimeout(30000);
+				connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
+				JsonObject json = readInputJSON(connection.getInputStream());
+				if (json.has("error")) {
+					throw new RenderError(json.getAsJsonObject("error"));
 				}
-			}).start();
-		}
-
-		@Override
-		public boolean startFrameCreation(@Nonnull final Player player, @Nonnull final URL url) {
-			if (!url.toString().contains("webrender.inventivetalent.org/renders/")) { throw new IllegalArgumentException("Invalid image URL"); }
-			return AnimatedFrames.getApi().startFrameCreation(player, url);
-		}
-	}
-
-	private String readInputString(InputStream stream) {
-		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-		String content = "";
-
-		try {
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				content += line;
+				URL imageURL = new URL(json.get("image").getAsString());
+				callback.call(imageURL, null);
+			} catch (Throwable e) {
+				callback.call(null, e);
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 
-		return content;
+		//		public boolean startFrameCreation(@Nonnull final Player player, @Nonnull final URL url) {
+		//			if (!url.toString().contains("webrender.inventivetalent.org/renders/")) { throw new IllegalArgumentException("Invalid image URL"); }
+		//			return AnimatedFrames.getApi().startFrameCreation(player, url);
+		//		}
 	}
 
-	private JSONObject readInputJSON(InputStream stream) {
-		return new JSONObject(readInputString(stream));
+	private JsonObject readInputJSON(InputStream stream) {
+		return new JsonParser().parse(new InputStreamReader(stream)).getAsJsonObject();
 	}
 }

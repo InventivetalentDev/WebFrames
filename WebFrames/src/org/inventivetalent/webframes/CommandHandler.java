@@ -28,13 +28,12 @@
 
 package org.inventivetalent.webframes;
 
+import com.google.gson.JsonObject;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.inventivetalent.animatedframes.AnimatedFrames;
-import org.json.JSONObject;
 
 import javax.annotation.Nullable;
 import java.net.MalformedURLException;
@@ -65,7 +64,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 			}
 			try {
 				final URL siteURL = new URL(args[0]);
-				final WebFramesAPI api = WebFrames.getApi();
+				final WebFrames.API api = WebFrames.getApi();
 
 				final RenderOptions options = new RenderOptions();
 
@@ -87,11 +86,12 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 
 							sender.sendMessage("§aSuccessfully rendered website");
 
-							JSONObject metaJson = new JSONObject();
-							metaJson.put("siteURL", siteURL);
-							metaJson.put("renderOptions", options.toJSON());
-							AnimatedFrames.getApi().injectMeta(player, metaJson);
-							api.startFrameCreation(player, value);
+							JsonObject metaJson = new JsonObject();
+							metaJson.addProperty("siteURL", siteURL.toString());
+							metaJson.add("renderOptions", options.toJSON());
+							//							AnimatedFrames.getApi().injectMeta(player, metaJson);
+							//							api.startFrameCreation(player, value);
+							player.chat("/framecreate WF-" + siteURL.toString() +" "+ value.toString());
 						} catch (RenderError error1) {
 							handleRenderError(player, error1);
 						} catch (Throwable ex) {

@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.inventivetalent</groupId>
   <artifactId>webframes</artifactId>
-  <version>1.1.0</version>
+  <version>2.0.0</version>
   <build>
     <sourceDirectory>src</sourceDirectory>
     <resources>
@@ -48,8 +48,15 @@
                   <include>org.json**</include>
                   <include>org.inventivetalent:webframes**</include>
                   <include>org.inventivetalent.update:**</include>
+                  <include>org.inventivetalent.spiget-update:bukkit**</include>
                 </includes>
               </artifactSet>
+              <relocations>
+                <relocation>
+                  <pattern>org.mcstats</pattern>
+                  <shadedPattern>org.inventivetalent.webframes.mcstats</shadedPattern>
+                </relocation>
+              </relocations>
             </configuration>
           </execution>
         </executions>
@@ -94,29 +101,9 @@
     <dependency>
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot-api</artifactId>
-      <version>1.8.7-R0.1-SNAPSHOT</version>
+      <version>1.9-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
       <exclusions>
-        <exclusion>
-          <artifactId>commons-lang</artifactId>
-          <groupId>commons-lang</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>json-simple</artifactId>
-          <groupId>com.googlecode.json-simple</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>gson</artifactId>
-          <groupId>com.google.code.gson</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>ebean</artifactId>
-          <groupId>org.avaje</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>snakeyaml</artifactId>
-          <groupId>org.yaml</groupId>
-        </exclusion>
         <exclusion>
           <artifactId>bungeecord-chat</artifactId>
           <groupId>net.md-5</groupId>
@@ -126,13 +113,13 @@
     <dependency>
       <groupId>org.bukkit</groupId>
       <artifactId>craftbukkit</artifactId>
-      <version>1.8.7-R0.1-SNAPSHOT</version>
+      <version>1.9-R0.1-SNAPSHOT</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.inventivetalent</groupId>
       <artifactId>animatedframes</artifactId>
-      <version>[3.0.0,)</version>
+      <version>[4.0.0,)</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>

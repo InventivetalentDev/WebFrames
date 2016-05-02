@@ -28,27 +28,27 @@
 
 package org.inventivetalent.webframes;
 
-import org.json.JSONObject;
+import com.google.gson.JsonObject;
 
 public class RenderError extends RuntimeException {
 
 	private int    id;
 	private String message;
 
-	public RenderError(JSONObject json) {
+	public RenderError(JsonObject json) {
 		if (json.has("error")) {
-			parseJSON(json.getJSONObject("error"));
+			parseJSON(json.getAsJsonObject("error"));
 		} else {
 			parseJSON(json);
 		}
 	}
 
-	void parseJSON(JSONObject json) {
+	void parseJSON(JsonObject json) {
 		if (json.has("id")) {
-			id = json.getInt("id");
+			id = json.get("id").getAsInt();
 		}
 		if (json.has("message")) {
-			message = json.getString("message");
+			message = json.get("message").getAsString();
 		}
 	}
 
