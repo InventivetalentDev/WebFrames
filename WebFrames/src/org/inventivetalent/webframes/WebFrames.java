@@ -28,8 +28,6 @@
 
 package org.inventivetalent.webframes;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.event.EventHandler;
@@ -38,6 +36,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.inventivetalent.animatedframes.event.AsyncFrameCreationEvent;
 import org.inventivetalent.animatedframes.event.AsyncFrameLoadEvent;
 import org.inventivetalent.animatedframes.event.AsyncImageRequestEvent;
+import org.inventivetalent.animatedframes.gson.JsonObject;
+import org.inventivetalent.animatedframes.gson.JsonParser;
 import org.inventivetalent.update.spiget.SpigetUpdate;
 import org.inventivetalent.update.spiget.UpdateCallback;
 import org.mcstats.MetricsLite;

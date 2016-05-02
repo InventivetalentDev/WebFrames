@@ -28,7 +28,7 @@
 
 package org.inventivetalent.webframes;
 
-import com.google.gson.JsonObject;
+import org.inventivetalent.animatedframes.gson.JsonObject;
 
 public class RenderError extends RuntimeException {
 
