@@ -28,7 +28,6 @@
 
 package org.inventivetalent.webframes;
 
-import com.google.gson.JsonObject;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -78,20 +77,16 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 				}
 
 				sender.sendMessage("§aRendering website...");
-				api.preloadImage(siteURL, options, new Callback<URL>() {
+				api.preloadImage(siteURL, options, new Callback<String>() {
 					@Override
-					public void call(URL value, @Nullable Throwable error) {
+					public void call(String value, @Nullable Throwable error) {
 						try {
 							if (error != null) { throw error; }
 
 							sender.sendMessage("§aSuccessfully rendered website");
 
-							JsonObject metaJson = new JsonObject();
-							metaJson.addProperty("siteURL", siteURL.toString());
-							metaJson.add("renderOptions", options.toJSON());
-							//							AnimatedFrames.getApi().injectMeta(player, metaJson);
-							//							api.startFrameCreation(player, value);
-							player.chat("/framecreate WF-" + siteURL.toString() +" "+ value.toString());
+							WebFrames.originalUrls.put(value, siteURL.toString());
+							player.chat("/framecreate WF-" + siteURL.toString() + " " + value);
 						} catch (RenderError error1) {
 							handleRenderError(player, error1);
 						} catch (Throwable ex) {

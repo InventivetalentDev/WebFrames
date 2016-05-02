@@ -48,6 +48,7 @@ public class RenderOptions {
 	}
 
 	public void loadJSON(JsonObject jsonObject) {
+		if (jsonObject == null) { return; }
 		for (Option option : Option.values()) {
 			if (jsonObject.has(option.name)) {
 				options.put(option, jsonObject.get(option.name).getAsString());

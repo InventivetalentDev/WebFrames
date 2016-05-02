@@ -49,12 +49,16 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.HashMap;
+import java.util.Map;
 
 public class WebFrames extends JavaPlugin {
 
 	public static WebFrames instance;
 
 	static final String RENDER_URL = "https://webrender.inventivetalent.org/?url=%s%s";
+
+	static Map<String, String> originalUrls = new HashMap<>();
 
 	static API api;
 	SpigetUpdate spigetUpdate;
@@ -79,12 +83,8 @@ public class WebFrames extends JavaPlugin {
 			@EventHandler
 			public void on(final AsyncFrameCreationEvent event) throws MalformedURLException {
 				if (event.getSource().toLowerCase().contains("webrender.inventivetalent.org")) {
-					getApi().preloadImage(new URL(event.getSource()), new RenderOptions(), new Callback<URL>() {
-						@Override
-						public void call(URL value, @Nullable Throwable error) {
-							event.getMeta().addProperty("siteURL", value.toString());
-						}
-					});
+					final String site = originalUrls.get(event.getSource());
+					event.getMeta().addProperty("siteURL", site);
 				}
 			}
 
@@ -98,10 +98,10 @@ public class WebFrames extends JavaPlugin {
 						RenderOptions renderOptions = new RenderOptions();
 						renderOptions.loadJSON(meta.getAsJsonObject("renderOptions"));
 
-						getApi().preloadImage(siteURL, renderOptions, new Callback<URL>() {
+						getApi().preloadImage(siteURL, renderOptions, new Callback<String>() {
 							@Override
-							public void call(URL value, @Nullable Throwable error) {
-								event.getFrame().setImageSource(value.toString());
+							public void call(String value, @Nullable Throwable error) {
+								event.getFrame().setImageSource(value);
 							}
 						});
 					} catch (Exception e) {
@@ -154,7 +154,7 @@ public class WebFrames extends JavaPlugin {
 
 	public class API {
 
-		public void preloadImage(@Nonnull final URL url, @Nonnull final RenderOptions options, @Nonnull final Callback<URL> callback) {
+		public void preloadImage(@Nonnull final URL url, @Nonnull final RenderOptions options, @Nonnull final Callback<String> callback) {
 			try {
 				URL renderURL = new URL(String.format(RENDER_URL, url.toString(), options.toURLVar()));
 				URLConnection connection = renderURL.openConnection();
@@ -164,8 +164,7 @@ public class WebFrames extends JavaPlugin {
 				if (json.has("error")) {
 					throw new RenderError(json.getAsJsonObject("error"));
 				}
-				URL imageURL = new URL(json.get("image").getAsString());
-				callback.call(imageURL, null);
+				callback.call(json.get("image").getAsString(), null);
 			} catch (Throwable e) {
 				callback.call(null, e);
 			}
