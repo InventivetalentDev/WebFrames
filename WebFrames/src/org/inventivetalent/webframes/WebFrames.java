@@ -32,6 +32,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.inventivetalent.animatedframes.event.AsyncFrameCreationEvent;
 import org.inventivetalent.animatedframes.event.AsyncFrameLoadEvent;
@@ -114,6 +115,22 @@ public class WebFrames extends JavaPlugin {
 			public void on(AsyncImageRequestEvent event) {
 				if (event.getSource().contains("webrender.inventivetalent.org")) {
 					event.setShouldDownload(true);
+				}
+			}
+
+			@EventHandler
+			public void on(final PlayerJoinEvent event) {
+				if (event.getPlayer().hasPermission("webframes.updatecheck")) {
+					spigetUpdate.checkForUpdate(new UpdateCallback() {
+						@Override
+						public void updateAvailable(String s, String s1, boolean b) {
+							event.getPlayer().sendMessage("§aA new version for §6WebFrames §ais available (§7v" + s + "§a). Download it from https://r.spiget.org/11840");
+						}
+
+						@Override
+						public void upToDate() {
+						}
+					});
 				}
 			}
 		}, this);
