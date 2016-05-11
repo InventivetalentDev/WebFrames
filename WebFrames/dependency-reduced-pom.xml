@@ -45,9 +45,7 @@
               <artifactSet>
                 <includes>
                   <include>org.mcstats.*</include>
-                  <include>org.json**</include>
                   <include>org.inventivetalent:webframes**</include>
-                  <include>org.inventivetalent.update:**</include>
                   <include>org.inventivetalent.spiget-update:bukkit**</include>
                 </includes>
               </artifactSet>
