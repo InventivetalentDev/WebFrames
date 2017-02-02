@@ -1,6 +1,5 @@
 package org.inventivetalent.webframes;
 
-import com.sun.istack.internal.Nullable;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -51,7 +50,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 				sender.sendMessage("§aRendering website...");
 				api.preloadImage(siteURL, options, new Callback<String>() {
 					@Override
-					public void call(String value, @Nullable Throwable error) {
+					public void call(String value, Throwable error) {
 						try {
 							if (error != null) { throw error; }
 
