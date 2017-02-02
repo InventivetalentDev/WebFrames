@@ -1,31 +1,3 @@
-/*
- * Copyright 2015-2016 inventivetalent. All rights reserved.
- *
- *  Redistribution and use in source and binary forms, with or without modification, are
- *  permitted provided that the following conditions are met:
- *
- *     1. Redistributions of source code must retain the above copyright notice, this list of
- *        conditions and the following disclaimer.
- *
- *     2. Redistributions in binary form must reproduce the above copyright notice, this list
- *        of conditions and the following disclaimer in the documentation and/or other materials
- *        provided with the distribution.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ''AS IS'' AND ANY EXPRESS OR IMPLIED
- *  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
- *  FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR
- *  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- *  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- *  The views and conclusions contained in the software and documentation are those of the
- *  authors and contributors and should not be interpreted as representing official policies,
- *  either expressed or implied, of anybody else.
- */
-
 package org.inventivetalent.webframes;
 
 import org.bukkit.Bukkit;
@@ -41,10 +13,7 @@ import org.inventivetalent.animatedframes.gson.JsonObject;
 import org.inventivetalent.animatedframes.gson.JsonParser;
 import org.inventivetalent.update.spiget.SpigetUpdate;
 import org.inventivetalent.update.spiget.UpdateCallback;
-import org.mcstats.MetricsLite;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
@@ -101,7 +70,7 @@ public class WebFrames extends JavaPlugin {
 
 						getApi().preloadImage(siteURL, renderOptions, new Callback<String>() {
 							@Override
-							public void call(String value, @Nullable Throwable error) {
+							public void call(String value, Throwable error) {
 								event.getFrame().setImageSource(value);
 							}
 						});
@@ -142,27 +111,19 @@ public class WebFrames extends JavaPlugin {
 
 		api = new API();
 
-		try {
-			MetricsLite metrics = new MetricsLite(this);
-			if (metrics.start()) {
-				getLogger().info("Metrics started");
+		spigetUpdate = new SpigetUpdate(this, 11840).setUserAgent("WebFrames/" + getDescription().getVersion());
+		spigetUpdate.checkForUpdate(new UpdateCallback() {
+			@Override
+			public void updateAvailable(String s, String s1, boolean b) {
+				getLogger().info("A new version is available (" + s + "). Download it from https://r.spiget.org/11840");
+				getLogger().info("(If the above version is lower than the installed version, you are probably up-to-date)");
 			}
 
-			spigetUpdate = new SpigetUpdate(this, 11840).setUserAgent("WebFrames/" + getDescription().getVersion());
-			spigetUpdate.checkForUpdate(new UpdateCallback() {
-				@Override
-				public void updateAvailable(String s, String s1, boolean b) {
-					getLogger().info("A new version is available (" + s + "). Download it from https://r.spiget.org/11840");
-					getLogger().info("(If the above version is lower than the installed version, you are probably up-to-date)");
-				}
-
-				@Override
-				public void upToDate() {
-					getLogger().info("The plugin is up-to-date.");
-				}
-			});
-		} catch (Exception e) {
-		}
+			@Override
+			public void upToDate() {
+				getLogger().info("The plugin is up-to-date.");
+			}
+		});
 	}
 
 	public static API getApi() {
@@ -171,7 +132,7 @@ public class WebFrames extends JavaPlugin {
 
 	public class API {
 
-		public void preloadImage(@Nonnull final URL url, @Nonnull final RenderOptions options, @Nonnull final Callback<String> callback) {
+		public void preloadImage(final URL url, final RenderOptions options, final Callback<String> callback) {
 			try {
 				URL renderURL = new URL(String.format(RENDER_URL, url.toString(), options.toURLVar()));
 				URLConnection connection = renderURL.openConnection();
