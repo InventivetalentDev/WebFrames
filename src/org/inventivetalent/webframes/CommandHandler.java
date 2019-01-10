@@ -3,16 +3,12 @@ package org.inventivetalent.webframes;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-public class CommandHandler implements CommandExecutor, TabCompleter {
+public class CommandHandler implements CommandExecutor {
 
 	@Override
 	public boolean onCommand(final CommandSender sender, Command command, String s, String[] args) {
@@ -36,19 +32,10 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 				final URL siteURL = new URL(args[0]);
 				final WebFrames.API api = WebFrames.getApi();
 
-				final RenderOptions options = new RenderOptions();
-
-				try {
-					options.parseArguments(Arrays.copyOfRange(args, 1, args.length));
-				} catch (IllegalArgumentException ie) {
-					sender.sendMessage("§c" + ie.getMessage());
-					sender.sendMessage("§cAvailable options: ");
-					sender.sendMessage("§c-w <width> | -h <height> | -q <quality> | -z <zoom> | -d <javascript delay>");
-					return false;
-				}
+				final String size = args.length > 1 ? args[1]:"640x360";
 
 				sender.sendMessage("§aRendering website...");
-				api.preloadImage(siteURL, options, new Callback<String>() {
+				api.preloadImage(siteURL, size, new Callback<String>() {
 					@Override
 					public void call(String value, Throwable error) {
 						try {
@@ -57,7 +44,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 							sender.sendMessage("§aSuccessfully rendered website");
 
 							WebFrames.originalUrls.put(value, siteURL.toString());
-							player.chat("/framecreate WF-" + siteURL.toString().replace("http:","").replace("https:","").replace("\\", "").replace("/", "") + " " + value);
+							player.chat("/framecreate WF-" + siteURL.toString().replace("http:", "").replace("https:", "").replace("\\", "").replace("/", "") + " " + value);
 						} catch (RenderError error1) {
 							handleRenderError(player, error1);
 						} catch (Throwable ex) {
@@ -81,20 +68,6 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 		return false;
 	}
 
-	@Override
-	public List<String> onTabComplete(CommandSender sender, Command command, String s, String[] args) {
-		List<String> list = new ArrayList<>();
-
-		if (args.length >= 2) {
-			if (sender.hasPermission("webframe.create")) {
-				for (RenderOptions.Option option : RenderOptions.Option.values()) {
-					list.add("-" + option.key);
-				}
-			}
-		}
-
-		return list;
-	}
 
 	void handleRenderError(Player player, RenderError error) {
 		player.sendMessage("§cAn error occurred while rendering the website:");

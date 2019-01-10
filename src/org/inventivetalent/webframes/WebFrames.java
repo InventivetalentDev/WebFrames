@@ -26,9 +26,10 @@ public class WebFrames extends JavaPlugin {
 
 	public static WebFrames instance;
 
-	static final String RENDER_URL = "https://api.webrender.co/render?url=%s&format=png%s";
+	static final String RENDER_URL = "https://api.webrender.co/render?url=%s&format=png&options={\"sizes\":\"%s\"}";
 
 	static Map<String, String> originalUrls = new HashMap<>();
+	static Map<String, String> sizes        = new HashMap<>();
 
 	static API api;
 	SpigetUpdate spigetUpdate;
@@ -56,6 +57,7 @@ public class WebFrames extends JavaPlugin {
 				if (event.getSource().toLowerCase().contains("webrender.co")) {
 					final String site = originalUrls.get(event.getSource());
 					event.getMeta().addProperty("siteURL", site);
+					event.getMeta().addProperty("size", sizes.get(event.getSource()));
 				}
 			}
 
@@ -66,10 +68,8 @@ public class WebFrames extends JavaPlugin {
 					if (meta == null || !meta.has("siteURL")) { return; }
 					try {
 						URL siteURL = new URL(meta.get("siteURL").getAsString());
-						RenderOptions renderOptions = new RenderOptions();
-						renderOptions.loadJSON(meta.getAsJsonObject("renderOptions"));
 
-						getApi().preloadImage(siteURL, renderOptions, new Callback<String>() {
+						getApi().preloadImage(siteURL, meta.get("size").getAsString(), new Callback<String>() {
 							@Override
 							public void call(String value, Throwable error) {
 								event.getFrame().setImageSource(value);
@@ -105,10 +105,8 @@ public class WebFrames extends JavaPlugin {
 			}
 		}, this);
 
-		CommandHandler commandHandler;
 		PluginCommand command = getCommand("webframecreate");
-		command.setExecutor(commandHandler = new CommandHandler());
-		command.setTabCompleter(commandHandler);
+		command.setExecutor(new CommandHandler());
 
 		api = new API();
 
@@ -134,12 +132,12 @@ public class WebFrames extends JavaPlugin {
 
 	public class API {
 
-		public void preloadImage(final URL url, final RenderOptions options, final Callback<String> callback) {
+		public void preloadImage(final URL url, final String size, final Callback<String> callback) {
 			Bukkit.getScheduler().runTaskAsynchronously(WebFrames.this, new Runnable() {
 				@Override
 				public void run() {
 					try {
-						URL renderURL = new URL(String.format(RENDER_URL, url.toString(), options.toURLVar()));
+						URL renderURL = new URL(String.format(RENDER_URL, url.toString(), size));
 						URLConnection connection = renderURL.openConnection();
 						connection.setConnectTimeout(30000);
 						connection.setRequestProperty("User-Agent", "WebFrames/" + getDescription().getVersion());
