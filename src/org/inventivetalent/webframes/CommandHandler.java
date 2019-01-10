@@ -44,6 +44,7 @@ public class CommandHandler implements CommandExecutor {
 							sender.sendMessage("§aSuccessfully rendered website");
 
 							WebFrames.originalUrls.put(value, siteURL.toString());
+							WebFrames.sizes.put(value, siteURL.toString());
 							player.chat("/framecreate WF-" + siteURL.toString().replace("http:", "").replace("https:", "").replace("\\", "").replace("/", "") + " " + value);
 						} catch (RenderError error1) {
 							handleRenderError(player, error1);
