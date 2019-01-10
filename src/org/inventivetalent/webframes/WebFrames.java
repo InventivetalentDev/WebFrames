@@ -26,7 +26,7 @@ public class WebFrames extends JavaPlugin {
 
 	public static WebFrames instance;
 
-	static final String RENDER_URL = "https://webrender.inventivetalent.org/?url=%s%s";
+	static final String RENDER_URL = "https://api.webrender.co/render?url=%s&format=png%s";
 
 	static Map<String, String> originalUrls = new HashMap<>();
 
@@ -45,6 +45,7 @@ public class WebFrames extends JavaPlugin {
 			Bukkit.getPluginManager().disablePlugin(this);
 			return;
 		}
+		getLogger().info("Powered by WebRender.co");
 
 		instance = this;
 
@@ -52,7 +53,7 @@ public class WebFrames extends JavaPlugin {
 
 			@EventHandler
 			public void on(final AsyncFrameCreationEvent event) throws MalformedURLException {
-				if (event.getSource().toLowerCase().contains("webrender.inventivetalent.org")) {
+				if (event.getSource().toLowerCase().contains("webrender.co")) {
 					final String site = originalUrls.get(event.getSource());
 					event.getMeta().addProperty("siteURL", site);
 				}
@@ -60,7 +61,7 @@ public class WebFrames extends JavaPlugin {
 
 			@EventHandler
 			public void on(final AsyncFrameLoadEvent event) {
-				if (event.getFrame().getImageSource().contains("webrender.inventivetalent.org/renders/")) {
+				if (event.getFrame().getImageSource().contains("img.webrender.co/")) {
 					JsonObject meta = event.getFrame().getMeta();
 					if (meta == null || !meta.has("siteURL")) { return; }
 					try {
@@ -82,7 +83,7 @@ public class WebFrames extends JavaPlugin {
 
 			@EventHandler
 			public void on(AsyncImageRequestEvent event) {
-				if (event.getSource().contains("webrender.inventivetalent.org")) {
+				if (event.getSource().contains("webrender.co")) {
 					event.setShouldDownload(true);
 				}
 			}
@@ -111,7 +112,8 @@ public class WebFrames extends JavaPlugin {
 
 		api = new API();
 
-		spigetUpdate = new SpigetUpdate(this, 11840).setUserAgent("WebFrames/" + getDescription().getVersion());
+		spigetUpdate = new SpigetUpdate(this, 11840)
+				.setUserAgent("WebFrames/" + getDescription().getVersion());
 		spigetUpdate.checkForUpdate(new UpdateCallback() {
 			@Override
 			public void updateAvailable(String s, String s1, boolean b) {
@@ -137,7 +139,7 @@ public class WebFrames extends JavaPlugin {
 				URL renderURL = new URL(String.format(RENDER_URL, url.toString(), options.toURLVar()));
 				URLConnection connection = renderURL.openConnection();
 				connection.setConnectTimeout(30000);
-				connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
+				connection.setRequestProperty("User-Agent", "WebFrames/" + getDescription().getVersion());
 				JsonObject json = readInputJSON(connection.getInputStream());
 				if (json.has("error")) {
 					throw new RenderError(json.getAsJsonObject("error"));
