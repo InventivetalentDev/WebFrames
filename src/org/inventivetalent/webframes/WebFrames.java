@@ -135,19 +135,34 @@ public class WebFrames extends JavaPlugin {
 	public class API {
 
 		public void preloadImage(final URL url, final RenderOptions options, final Callback<String> callback) {
-			try {
-				URL renderURL = new URL(String.format(RENDER_URL, url.toString(), options.toURLVar()));
-				URLConnection connection = renderURL.openConnection();
-				connection.setConnectTimeout(30000);
-				connection.setRequestProperty("User-Agent", "WebFrames/" + getDescription().getVersion());
-				JsonObject json = readInputJSON(connection.getInputStream());
-				if (json.has("error")) {
-					throw new RenderError(json.getAsJsonObject("error"));
+			Bukkit.getScheduler().runTaskAsynchronously(WebFrames.this, new Runnable() {
+				@Override
+				public void run() {
+					try {
+						URL renderURL = new URL(String.format(RENDER_URL, url.toString(), options.toURLVar()));
+						URLConnection connection = renderURL.openConnection();
+						connection.setConnectTimeout(30000);
+						connection.setRequestProperty("User-Agent", "WebFrames/" + getDescription().getVersion());
+						final JsonObject json = readInputJSON(connection.getInputStream());
+						if (json.has("error")) {
+							throw new RenderError(json.getAsJsonObject("error"));
+						}
+						Bukkit.getScheduler().runTask(WebFrames.this, new Runnable() {
+							@Override
+							public void run() {
+								callback.call(json.get("image").getAsString(), null);
+							}
+						});
+					} catch (final Throwable e) {
+						Bukkit.getScheduler().runTask(WebFrames.this, new Runnable() {
+							@Override
+							public void run() {
+								callback.call(null, e);
+							}
+						});
+					}
 				}
-				callback.call(json.get("image").getAsString(), null);
-			} catch (Throwable e) {
-				callback.call(null, e);
-			}
+			});
 		}
 
 		//		public boolean startFrameCreation(@Nonnull final Player player, @Nonnull final URL url) {
