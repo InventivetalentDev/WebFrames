@@ -81,7 +81,7 @@
         <dependency>
             <groupId>org.inventivetalent</groupId>
             <artifactId>animatedframes</artifactId>
-            <version>4.4.1-SNAPSHOT</version>
+            <version>4.11.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.inventivetalent.spiget-update</groupId>
